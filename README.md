@@ -10,12 +10,12 @@ https://golang.google.cn/dl/
 
 go：安装go sdk
 
-go_project：写项目代码
+goProject：写项目代码
 
 1. 安装go后，
-2. 打开终端，以管理员身份，输入`go env -w GO111MODEULE=on`
-3. 在go_project里面打开终端，输入 `go mod init go_project`
-4. go_project里面建一个src文件夹，里面书写项目要代码
+2. 打开终端，以管理员身份，输入`go env -w GO111MODEULE=on` 这句代码表示开启 go model 模式，不从 GOPATH下面去找包
+3. 在goProject里面打开终端，输入 `go mod init goProject`，初始化 go mod 要加上文件夹名
+4. goProject里面建一个src文件夹，里面书写项目要代码
 
 
 
@@ -304,7 +304,7 @@ var a = make(map[string]string) // 没有声明容量
 
 **方式三：声明，直接赋值**
 
-``` go
+```go
 var a map[string]string = map[string]string{"no1": "成都"}
 a["no2"] = "北京"
 ```
@@ -331,7 +331,6 @@ a["no2"] = "北京"
    如果不存在，不删除，不报错
 
    ```go
-   
    var a map[string]string
    a = make(map[string]string)
    a["no1"] = "宋江"
@@ -638,7 +637,7 @@ stu := Student{Name: "张三"}
 fmt.Println(&stu) // 打印 Name = 张三 因为手动实现了 String
 ```
 
-### 工厂模式
+### 工厂模式/构造函数
 
 Golang的结构体**没有构造函数**，通常可以使用工厂模式来解决这个问题
 
@@ -666,7 +665,7 @@ func main() {
 }
 ```
 
-如果我要让 Student 封装一下，并且外面的包还能访问
+如果我要让 Student 变成小写 student 封装一下，并且外面的包还能访问
 
 ```go
 // package model
@@ -737,6 +736,131 @@ func main() {
     fmt.Println("name=", (*stu).Name, "score=", stu.GetScore()) // 简写 stu.Name
 }
 
+```
+
+### 封装
+
+```go
+// foo 包
+package foo
+
+import (
+	"fmt"
+)
+func MyFoo () {
+	fmt.Print("MyFoo函数")
+}
+type account struct {
+	account string
+	password string
+	balance float64
+
+}
+func Newaccount (a string, p string, b float64) *account {
+	return &account{
+		account: a,
+		password: p,
+		balance: b,
+	}
+}
+func (a *account) Setaccount(account string) {
+	a.account = account
+}
+func (a *account) SetPassword(pas string) {
+	a.password = pas
+}
+func (a *account) SetBalance(balance float64) {
+	a.balance = balance
+}
+func (a *account) Getaccount() string {
+	return a.account
+}
+func (a *account) GetPassword() string {
+	return a.password
+}
+func (a *account) GetBalance() float64 {
+	return a.balance
+}
+func main() {
+	fmt.Print("我是foo")
+}
+```
+
+
+
+```go
+// main 入口
+package main
+
+import (
+	"fmt"
+	"goProject/testProJect01/foo"
+)
+
+
+func main() {
+	foo.MyFoo()
+	account := foo.Newaccount("农业银行:123", "666666", 999.9)
+	// foo.SetAccount("123123")
+	if account != nil {
+		fmt.Println("创建成功")
+	}
+	fmt.Print(account) // &{农业银行:123 666666 999.9}
+    fmt.Print(*account)// {农业银行:123 666666 999.9}
+	fmt.Println("获取账户名称：",account.Getaccount()) // 获取账户名称： 农业银行:123
+ }
+```
+
+### 继承 =>结构体嵌套
+
+```go
+package main
+
+import "fmt"
+
+// 封装
+type Student struct {
+	Name string
+	Age int
+	Score int // 成绩
+}
+func (stu *Student) ShowInfo() {
+	fmt.Printf("学生名=%v 年龄=%v 成绩=%v \n", stu.Name,stu.Age,stu.Score)
+}
+func (stu *Student) SetScore(score int) {
+	stu.Score = score
+}
+// 小学生 结构体
+type Pupil struct {
+	Student
+}
+func (p *Pupil) testing() {
+	fmt.Println("小学生考试中")
+}
+// 大学生结构体
+type Graduate struct {
+	Student // 嵌入了 Student 匿名结构体；完整的理解：匿名字段+嵌套结构体，匿名字段的字段类型为结构体；例：stu Student stu 是名称 Student是类型，好比：Name string
+}
+func (p *Graduate) testing() {
+	fmt.Println("大学生考试中")
+}
+
+func main() {
+	// 当我们对结构体嵌入了匿名结构体，使用方法会发生改变
+	// 实例化 小学生 Pupil ：var pupil1 Pupil
+	pupil1 := &Pupil{}
+	pupil1.Student.Name = "李四"
+	pupil1.Student.Age = 16
+	pupil1.Student.SetScore(60) // 设置成绩函数
+	pupil1.Student.ShowInfo() // 打印学生信息 => 学生名=李四 年龄=16 成绩=60 
+
+	// 实例化 大学生 Pupil ：var graduate1 Graduate
+	graduate1 := &Pupil{}
+	graduate1.Student.Name = "王五"
+	graduate1.Student.Age = 20
+	graduate1.Student.SetScore(99) // 设置成绩函数
+	graduate1.Student.ShowInfo() // 打印学生信息 => 学生名=王五 年龄=20 成绩=99 
+}
 ```
 
 
@@ -865,7 +989,6 @@ studentMap["stu01"]["sex"] = "男"
    ```go
    map[string]map[string]string
    ```
-
 
 ## 结构体/方法
 
