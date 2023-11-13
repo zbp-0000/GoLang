@@ -863,6 +863,125 @@ func main() {
 }
 ```
 
+细节
+
+```go
+// 如果两个匿名结构体种都有  name age 
+那么需要在前面指定哪个结构体，比如
+type B struct{
+    C
+    D
+}
+var b B 
+b.C.name // 假设 C 和 D 里面都有name 那么就需要指定给哪个匿名结构体赋值 
+```
+
+### 多态
+
+# 接口 interface
+
+### 语法-引用类型
+
+1. 接口种所有的方法都没有方法体，即都是没有实现的方法,keyiyou ，可以有形参和返回值
+
+2. 接口本身不能创建实例，错误`var a AInterface`
+
+3. 一个自定义类型需要将接口中的所有方法都实现，那么这个自定义类型才实现了该接口
+
+4. 只要是自定义类型，都可以实现接口，不仅仅是结构体可以实现
+
+   ```go
+   // 定义变量 实现接口
+   type integer int
+   func (i integer) Say() {
+       fmt.Println("我是integer，我是实现了接口，i=", i)
+   }
+   // 定义接口
+   type AInterface interfaec {
+       Say()
+   }
+   func main() {
+       var i integer = 10
+       var b AInterface = i
+       b.Say() // 打印：我是integer，我是实现了接口，i=10
+   }
+   ```
+
+5. 一个自定义类型，可以实现多个接口
+
+   ```go
+   type AInterface interfaec {
+       Say()
+   }
+   type BInterface interfaec {
+       Hello()
+   }
+   type Monster struct {}
+   func (m *Monster) Hello() {
+       fmt.Println("Monster Hello()~~~")
+   }
+   func (m *Monster) Say() {
+       fmt.Println("Monster Say()~~~")
+   }
+   var monster Monster
+   var a AInterface = monster
+   var b BInterface = monster
+   a.Say() // 注意：a 里面没有 Hello 方法
+   b.Hello() // 注意： b 里面没有 Say 方法
+   ```
+
+   
+
+6. 接口中不能有任何变量
+
+7. 一个接口(比如A接口)可以**继承多个**别的接口(比如B,C接口)，这是如果要实现A接口，也必须实现B,C接口的全部方法
+
+   ```go
+   type AInterface interfaec {
+       test01()
+       BInterface
+       CInterface
+   }
+   type BInterface interfaec {
+       test02()
+   }
+   type CInterface interfaec {
+       test03()
+   }
+   // 实现 AInterface 就需要将 BInterface CInterface 的方法都实现
+   type Stu struct {}
+   func (stu Stu) test01() {}
+   func (stu Stu) test02() {}
+   func (stu Stu) test03() {}
+   func main() {
+       var stu Stu // 结构体变量 实现了 Say()
+       var a AInterface = stu
+       a.test01()
+   }
+   ```
+
+8. interface 默认是一个指针(**引用类型**)，如果没有对interface初始化就是用，那么会输出nil
+
+9. 空接口interfaec{}没有任何方法，所以所有类型都实现了空接口
+
+```go
+// 定义接口
+type AInterface interfaec {
+    Say()
+}
+// 定义 结构体
+type Stu struct {}
+// 只要定义了 Say() 那么就实现了接口
+func (stu *A) Say() {
+    fmt.Println("我是Say")
+}
+func main() {
+    var stu Stu // 结构体变量 实现了 Say()
+    var a AInterface = stu
+    a.Say()
+}
+```
+
 
 
 
@@ -1016,5 +1135,60 @@ func main() {
 	method.MethodUtils()
 }
 
+```
+
+## 接口
+
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"sort"
+)
+
+// 1.声明Hero结构体
+type Hero struct {
+	Name string
+	Age int
+}
+
+// 2.声明一个Hero结构体切片类型
+type HeroSlice []Hero
+
+// 3.实现INterfaec接口
+func (hs HeroSlice) Len() int {
+	return len(hs)
+}
+func (hs HeroSlice) Less(i, j int) bool {
+	return hs[i].Age < hs[j].Age
+}
+func (hs HeroSlice) Swap(i, j int) {
+	temp := hs[i]
+	hs[i] = hs[j]
+	hs[j] = temp
+}
+func main() {
+	// 先定义个数组/切片
+	// var intSlice = []int{0, -1, 10, 7, 90}
+	var heroes HeroSlice
+	for i := 0; i < 10; i++ {
+		hero := Hero{
+			Name: fmt.Sprintf("英雄~%d", rand.Intn(100)),
+			Age: rand.Intn(100),
+		}
+		heroes = append(heroes, hero)
+	}
+	for _, v := range heroes {
+		fmt.Println(v)
+	}
+	sort.Sort(heroes) // 进行排序
+	fmt.Println("--------分割线-------")
+	for _, v := range heroes {
+		fmt.Println(v)
+	}
+	fmt.Println("demo")
+}
 ```
 
