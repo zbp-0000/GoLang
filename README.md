@@ -1192,6 +1192,106 @@ func main() {
 }
 ```
 
+收支系统
+
+```go
+package main
+
+import "fmt"
+
+type IEType struct {
+	IncomeExpenses string
+	AllMoney float64
+	IEMoney float64
+	Explain string
+}
+type IETypeSlice []IEType
+func (ie *IEType) CalculatedIncome(incomeMoney float64) {
+	ie.AllMoney += incomeMoney
+	ie.IEMoney = incomeMoney
+}
+func (ie *IEType) CalculatedExpend(incomeMoney float64) {
+	ie.AllMoney -= incomeMoney
+	ie.IEMoney = incomeMoney
+}
+func main() {
+	// 用户输入的选择
+	key := ""
+	// 是否退出
+	loop := true
+	// 收支明细数组切片
+	var incomeExpenses IETypeSlice
+	ieType := IEType{
+		IncomeExpenses: "收入",
+		AllMoney: 100.0,
+		IEMoney: 100.0,
+		Explain: "捡到钱",
+	}
+	incomeExpenses = append(incomeExpenses, ieType)
+	// 收入
+	incomeMoney := 0.00
+	incomeExplain := ""
+	// 支出
+	expendMoney := 0.00
+	expendExplain := ""
+	for {
+		fmt.Println("---------------家庭收支记账软件---------------")
+		fmt.Println("                 1 收支明细")
+		fmt.Println("                 2 登记收入")
+		fmt.Println("                 3 登记支出")
+		fmt.Println("                 4 退出软件")
+		fmt.Print("                  请选择(1-4)：")
+		fmt.Scanln(&key)
+
+		switch key {
+			case "1" :
+				fmt.Println("---------------当前收支明细---------------")
+				fmt.Println("收支     账户金额     收支金额     说   明")
+				for _, v := range incomeExpenses {
+					fmt.Printf("%v        %v        %v        %v \n",v.IncomeExpenses,  v.AllMoney, v.IEMoney, v.Explain)
+				}
+			case "2":
+				fmt.Println("本次收入金额：")
+				fmt.Scanln(&incomeMoney)
+				fmt.Println("本次收入说明：")
+				fmt.Scanln(&incomeExplain)
+				ie := IEType{
+					IncomeExpenses: "收入",
+					AllMoney: 0,
+					IEMoney: 0,
+					Explain: incomeExplain,
+				}
+				ie.CalculatedIncome(incomeMoney)
+				incomeExpenses = append(incomeExpenses, ie)
+			case "3":
+				fmt.Println("本次支出金额：")
+				fmt.Scanln(&expendMoney)
+				fmt.Println("本次支出说明：")
+				fmt.Scanln(&expendExplain)
+				ie := IEType{
+					IncomeExpenses: "支出",
+					AllMoney: 0,
+					IEMoney: 0,
+					Explain: expendExplain,
+				}
+				ie.CalculatedExpend(incomeMoney)
+				incomeExpenses = append(incomeExpenses, ie)
+			case "4":
+				loop = false
+			default :
+				fmt.Println("请输入正确的选项")
+		}
+
+		if !loop {
+			break
+		}
+	}
+	fmt.Println("你退出了")
+}
+```
+
+
+
 客户管理系统
 
 ```go
