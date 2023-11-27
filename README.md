@@ -984,6 +984,328 @@ func main() {
 
 
 
+# 文件的操作
+
+1. 打开文件
+
+   ```go
+   func Open(name string) (file *File, err error)
+   // name 文件路径
+   // file 文件指针
+   // err 错误
+   ```
+
+   Open打开一个文件用于读取。如果操作成功，返回文件对象的方法可用于读取数据；对应的文件描述符具有O_RDONLY模式。如果出错，错误底层类型是 *PathError
+
+2. 关闭文件
+
+   ```go
+   func (f *File) Close() error
+   // f 文件指针
+   ```
+
+   Close关闭文件f，使文件不能用于读写。它返回可能出现的错误
+
+### 语法
+
+```go
+import (
+	"fmt"
+    "os"
+)
+func main() {
+    // 打开文件
+    file, err := os.Open("d:/Test.txt")
+    if err != nil {
+        fmt.Println("打开文件失败，对应错误：", err)
+    }
+     fmt.Println("打开文件成功：", file) // 输出指针
+    // 关闭文件
+    err2 := os.Close()
+    if err2 != nil {
+        fmt.Println("关闭文件失败", err2)
+    }
+}
+```
+
+### IO流
+
+i ：input  输入
+
+o ：Output 输出
+
+```go
+import "io/ioutil"
+func ReadFile(filename string) ([]yte, error)
+// filename 文件路径
+```
+
+### 语法
+
+#### 一次性读取
+
+```go
+import "io/ioutil"
+func main() {
+    content, err := ioutil.ReadFile("d:/Test.txt")
+    if err != nil {
+        fmt.Println("读取错误")
+    }
+    // 如果读取成功
+    fmt.Println("%v", content) // 显示字节码
+    fmt.Println("%v", string(content)) // 转义为文字
+}
+```
+
+#### 缓冲读取
+
+默认一次读4096字节
+
+````go
+import (
+    "fmt"
+	"bufio" // 读取文件内容
+    "os"
+    "io"
+)
+func main() {
+    file, err := os.Open("d:/Test.txt")
+    if err != nil {
+        fmt.Println("打开文件失败")
+    }
+    // 当函数退出时，，让file关闭，防止内存泄漏；
+    defer file.Clone()
+    // 创建流
+    reader := bufio.NewReader(file)
+    // 读取操作：
+    for {
+        ste, err := reader.ReadString('\n') // 读取到一个换行就结束
+        if err == io.EOF { // io.EOF 表示已经读取到文件结尾
+            break
+        }
+        fmt.Println(str)
+    }
+}
+````
+
+写入文件操作
+
+```go
+func OpenFile(name string, flag int, perm FileMode) (file *File, err error)
+// name 文件打开路径
+// flag 文件打开模式，可以用 | 符号进行组合
+// perm 权限控制(linux/unix系统下才生效，windows下设置无效)
+```
+
+```go
+import (
+    "fmt"
+	"bufio" // 读取文件内容
+    "os"
+    "io"
+)
+func main() {
+    // 1. 打开文件
+    // os.O_RDWR | os.O_APPEND | os.O_CREATE 可在包里面找到
+    // 返回 file指针 和 err
+    file, err := os.OpenFile("d:/Demo.txt", os.O_RDWR | os.O_APPEND | os.O_CREATE, 0666)
+    // 及时的关闭
+    defer file.Clone()
+    // 写入文件操作：---> IO流 ---> 缓冲输出流
+    writer := bufio.NewWriter(file)
+    // 2. 写入内容
+    writer.WriteString("你好 张三") // 可以使用过for循环写多条
+    // 3. 更新文件
+    writer.Flush()
+}
+```
+
+#### 复制操作
+
+```go
+import (
+    "fmt"
+    "io/ioutil"
+)
+func main() {
+    // 定义源文件
+    file1Path := "d:/Demo.txt"
+    // 定义目标文件
+    file2Path := "d:/Demo2.txt"
+    
+    // 对文件进行读取
+    content, err := ioutil.ReadFile(file1Path)
+    if err ...
+    // 写出文件
+    err = ioutil.WriteFile(file2Path, content, 0666)
+    if err ...
+}
+```
+
+# 协程和管道
+
+## 1.协程
+
+```go
+// go func() {}
+func main() {
+    go func() {} // go 关键字 就是开启协程
+}
+```
+
+### WaitGroup
+
+该方法，主要是等协程运行完成后，才关闭主线程
+
+```go
+func (*WaitGroup) Add(delta int)
+func (wg *WaitGroup) Done()
+func (wg *WaitGroup) Wait()
+```
+
+```go
+import (
+	"fmt"
+    "sync"
+)
+var wg sync.WaitGroup // 只定义无需赋值
+func main() {
+    for i := 1; i <= 5; i++ {
+        wg.Add(1) // 协程+1
+        go func(n int) {
+            fmt.Println(n)
+            wg.Done() // 协程-1
+        }(i)
+    }
+    wg.Wait() // 相当于阻塞 什么时候wg减为0了，就停止
+}
+```
+
+> 如果防止忘记计数器减1操作，结合**defer**关键字使用
+
+```go
+// 修改代码 为 defer 把 wg.Done() 提到前面来
+for i := 1; i <= 5; i++ {
+        wg.Add(1) // 协程+1
+        go func(n int) {
+            defer wg.Done() // 协程-1
+            fmt.Println(n)
+        }(i)
+    }
+```
+
+### 多协程操作同一个文件
+
+```go
+package syncwait
+
+import (
+	"fmt"
+	"sync"
+)
+var wg sync.WaitGroup // 只定义无需赋值
+var totalNum int
+func add() {
+	defer wg.Done()
+	for i := 0; i < 10000; i++ {
+		totalNum += 1
+	}
+}
+func del() {
+	defer wg.Done()
+	for i := 0; i < 10000; i++ {
+		totalNum = totalNum - 1
+	}
+}
+func main() {
+	Foo()
+}
+func Foo() {
+	wg.Add(2)
+	go add()
+	go del()
+	wg.Wait()
+	fmt.Print(totalNum) // 打印出来是 随机数
+}
+```
+
+### 互斥锁
+
+Mutex为互拆锁，Lock()加锁，Unlock()解锁，性能、效率相对来说比较低
+
+```go
+func (m *Mutex) Lock()
+func (m *Mutex) Unlock()
+```
+
+```go
+// 重写 add 和 del 函数
+var lock sync.Mutex
+...
+func add() {
+	defer wg.Done()
+	for i := 0; i < 10000; i++ {
+        lock.Lock() // 加锁
+	    totalNum += 1
+        lock.Unlock() // 解锁
+	}
+}
+func del() {
+	defer wg.Done()
+	for i := 0; i < 10000; i++ {
+        lock.Lock()
+		totalNum = totalNum - 1
+        lock.Unlock()
+	}
+}
+```
+
+### 读写锁
+
+RWMutex是一个读写锁，经常用于读次数远远多于写次数的场景
+
+```go
+var lock sync.RWMutex // 加入读写锁
+```
+
+```go
+package main
+import (
+	"fmt"
+    "sync"
+    "time"
+)
+var wg sync.WaitGroup // 只定义无需赋值
+var lock sync.RWMutex
+func read() {
+    defer wg.Done()
+    lock.RLock() // 如果只是读数据，那么这个锁不产生影响，但是读写同时发生的时候，就会有影响
+    fmt.Println("开始读取数据")
+    time.Sleep(time.Second) // 停一秒 这样可以执行其他 协程
+    fmt.Println("读取数据成功")
+    lock.RUnlock()
+}
+func write() {
+    defer wg.Done()
+    fmt.Println("开始读取数据")
+    time.Sleep(time.Second) // 停一秒 这样可以执行其他 协程
+    fmt.Println("读取数据成功")
+    lock.Unlock()
+}
+func main() {
+    wg.Add(5) // 一共有6个协程
+    for i := 0; i < 5; i++ {
+        go read()
+    }
+    go write()
+    wg.Wait() // 等待协程完成
+}
+```
+
+## 2.管道 channel
+
+
+
 
 
 # 打印输出
