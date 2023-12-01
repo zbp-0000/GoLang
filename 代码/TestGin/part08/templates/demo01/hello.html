@@ -1,0 +1,45 @@
+{{define "demo01/hello.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/s/js/jQuery.min.js"></script>
+</head>
+<body>
+    定义一个用户的form表单：
+    <form action="/savefile" method="post">
+        <input type="file" class="myfile">
+        <input type="file" class="myfile">
+        <input type="file" class="myfile">
+        <input type="button" value="提交按钮" id="btn">
+    </form>
+    <script>
+        //获取按钮
+        var btn = document.getElementById("btn");
+        //给按钮加入一个单击事件：
+        btn.onclick = function () {
+            //创建存放form表单的数据：
+            var form_data = new FormData();
+            //获取多个文件：
+            var myfiles = $(".myfile");
+            //对多个文件进行遍历，每一个添加到form_data中去：
+            for (var i = 0;i < myfiles.length;i++){
+                form_data.append("myfile",myfiles[i].files[0]);
+            }
+            //利用ajax向后台传递数据：
+            $.ajax({
+                url : "/savefile",
+                type : "POST",
+                data : form_data,
+                contentType:false,
+                processData:false,
+                success : function () {
+                    
+                }
+            })
+        }
+    </script>
+</body>
+</html>
+{{end}}

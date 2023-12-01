@@ -1,0 +1,137 @@
+{{define "demo01/hello.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {{/*获取后端传过来的map_data中的内容：*/}}
+    {{/*. 当前的上下文，后端传过来的map_data这个上下文*/}}
+    {{.age}}
+    {{/*. 当前的上下文，后端传过来的map_data这个上下文*/}}
+    {{range .arr}}
+        {{/*. 上下文指的就是.arr这个上下文，指的就是遍历的每一个元素*/}}
+        {{.}}
+        {{/*在循环内部想获取根级上下文中的age的话，就需要使用$.来获取 （map_data这个上下文）*/}}
+        {{$.age}}
+    {{end}}
+    <br>
+    {{/*$i,$v  从 后端传过来的map_data这个上下文中获取数据 */}}
+    {{range $i,$v := .arr}}
+        {{$i}}
+        {{$v}}
+    {{end}}
+    <br>
+    {{range .arr}}
+        {{.}}
+    {{else}}
+        暂无数据
+    {{end}}
+
+
+    <br>
+    对符号的支持：
+    {{"马士兵教育"}}
+    {{`马士兵教育`}}{{`a`}}
+    {{'a'}}
+    {{print "马士兵教育"}}
+    {{print nil}} {{/*结果：<nil>*/}}
+
+
+    变量的定义：
+    {{$name := "马士兵888"}}
+    变量的使用：
+    {{$name}}
+
+    <br>
+    {{/*    如果flag是布尔类型，那么如果结果是true就会走这个分支*/}}
+    {{if .flag}}
+        后端传过来的是true
+    {{end}}
+    {{/*  如果username是字符串类型，那么就判断是否可以获取到，如果可以获取，那么执行分支  */}}
+    {{if .username}}
+        后端传入了数据
+    {{else}}
+        后端没有传入了数据
+    {{end}}
+
+    <br>
+    {{if .flag}}
+        {{if .username}}
+            哈哈
+        {{end}}
+    {{end}}
+
+
+    <br>
+    获取结构体中内容：
+    {{.stu.Age}}
+    {{.stu.Name}}
+
+    <br>
+    启动with关键字：
+    {{with .stu}}
+        {{.Age}}
+        {{.Name}}
+    {{else}}
+        暂无数据
+    {{end}}
+
+
+    <br>
+    内嵌另外模板：
+    {{/*    如果想要传递内容到内嵌模板中，可以通过.上下文进行传递，和内嵌页面共享上下文数据*/}}
+    {{template "templates/demo01/hello2.html" .}}
+
+    <br>
+    模板函数：
+    <br>
+    {{print "马士兵你好"}}
+    {{printf "名字：%s,年龄：%d" "马士兵" 45}}
+
+    {{len .arr}}
+
+    {{"msb" | printf "%s"}}
+    {{"msb" | len}}
+
+    {{printf "名字：%s,家庭所在地：%s" "msb" (printf "%s-%s" "北京市" "海淀区")}}
+    <br>
+    {{/*.age和.username都不是空，所以返回后一个*/}}
+    {{and .age .username}}
+    {{and .username .age}}
+    {{/*.xxx和.age只要有一个是空，那么返回空*/}}
+    {{and .xxx .age}}
+    <br>
+    {{/*.age和.username都不是空，所以返回前一个*/}}
+    {{or .age .username}}
+    {{or .username .age }}
+    {{/*    .xxx是空，但是.age不是空，返回第一个不为空*/}}
+    {{or .xxx .age }}
+    {{/*如果都是空，结果才是空*/}}
+    {{or .aaa .bbb}}
+    <br>
+    {{/*用于判断，看是否有值，返回相反的布尔值*/}}
+    {{not .age}}
+    {{not .aaa}}
+    <br>
+    {{index "abc" 1}}
+    {{index .arr 0}}
+
+    <br>
+    {{eq 26 89}}
+    {{ne 26 89}}
+    {{lt 26 89}}
+    {{le 26 89}}
+    {{gt 26 89}}
+    {{ge 26 89}}
+
+    <br>
+    获取后端的时间：
+    {{.now_time.Format "2006-01-02 15-04-05"}}
+    <br>
+    调用add函数：
+    {{add 11 82}}
+</body>
+</html>
+{{end}}
